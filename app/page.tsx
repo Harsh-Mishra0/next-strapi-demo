@@ -1,9 +1,10 @@
 import BlockRenderer from "./BlockRenderer";
-import Footer from "../components/Footer";
+import Cards from "../components/Cards";
+import { getCards } from "@/lib/cards";
 
 async function getPage() {
   const res = await fetch(
-    "http://localhost:1337/api/pages?populate[content][populate]=*",
+    "http://localhost:1337/api/pages?filters[slug][$eq]=home&populate=*",
     { cache: "no-store" }
   );
 
@@ -13,13 +14,28 @@ async function getPage() {
 
 export default async function Home() {
   const page = await getPage();
+  const cards = await getCards();
 
   if (!page) return <div>Loading...</div>;
 
+  const nonFooterBlocks = page.content.filter(
+    (block: any) => block.__component !== "sections.footer"
+  );
+
+  const footerBlock = page.content.filter(
+    (block: any) => block.__component === "sections.footer"
+  );
+
   return (
     <main className="min-h-screen">
-      <BlockRenderer blocks={page.content} />
-      <Footer />
+      {/* Navbar + Hero */}
+      <BlockRenderer blocks={nonFooterBlocks} />
+
+      {/* Cards */}
+      <Cards cards={cards} />
+
+      {/* Footer */}
+      <BlockRenderer blocks={footerBlock} />
     </main>
   );
 }
